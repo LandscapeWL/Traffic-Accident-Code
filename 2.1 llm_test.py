@@ -1,7 +1,8 @@
+import os
 from openai import OpenAI
 
 # 1) 连接到 Ollama/vllm 的 OpenAI 兼容接口
-client = OpenAI(base_url="https://api.zetatechs.com/v1", api_key="sk-IciKuJueph4IwRYCoJeEFF4UyiPGMCECDZh1E4ciL1nFvIn6")  # 这里随便填，LM Studio 一般不校验
+client = OpenAI(base_url="https://api.zetatechs.com/v1", api_key=os.environ["LLM_API_KEY"])  # 这里随便填，LM Studio 一般不校验
 
 # 2) 填模型名
 MODEL = "gemini-2.5-flash-lite-nothinking"

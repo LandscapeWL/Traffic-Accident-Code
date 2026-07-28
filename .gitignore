@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Jupyter and IDE-generated files
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+.virtual_documents/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+
+# Local data and generated artifacts
+data/
+*.tmp
+*.bak
+*.bd09ll.bak

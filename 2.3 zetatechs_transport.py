@@ -13,7 +13,7 @@ df = pd.read_csv(in_path)
 # ---------- OpenAI Client ----------
 client = OpenAI(
     base_url="https://api.zetatechs.com/v1",
-    api_key="sk-IciKuJueph4IwRYCoJeEFF4UyiPGMCECDZh1E4ciL1nFvIn6"
+    api_key=os.environ["LLM_API_KEY"]
 )
 MODEL = "gemini-2.0-flash-001"
 

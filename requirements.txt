@@ -1,0 +1,13 @@
+cartopy
+contextily
+geopandas
+jupyterlab
+matplotlib
+matplotlib-scalebar
+numpy
+openai
+pandas
+pypinyin
+requests
+shapely
+statsmodels
