@@ -16,7 +16,7 @@ The dataset is not stored in this code repository. Download the released CSV dat
 
 **https://doi.org/10.6084/m9.figshare.31829782**
 
-Check the Figshare record for the available dataset version and its license. Updating this code repository does not update the Figshare files. Please cite the Figshare record and the associated paper when using the data.
+The manuscript states that the public dataset is licensed under CC BY 4.0. Check the Figshare record for the available dataset version and its license. Updating this code repository does not update the Figshare files. Please cite the Figshare record and the associated paper when using the data.
 
 ## Revised screening counts
 
@@ -31,23 +31,31 @@ Check the Figshare record for the available dataset version and its license. Upd
 
 Geocoding failed for 1,811 records; these records were retained with missing coordinates at that step. Record-level deduplication does not establish incident-level uniqueness: different case numbers can refer to the same accident.
 
-## Dataset fields
+## Public-release dataset fields
+
+The revised core dataset has the following **11 public fields**, matching Table 1 of the manuscript. The party-information field (`privy`) and full judgment text (`case_text`) were removed from the revised files prepared for public release, including the example file, as stated in response R1-3.
 
 | Field | Description |
 | --- | --- |
 | `case_number` | Case number from the source judgment; not a guaranteed unique accident identifier |
-| `court_name` | Name of the adjudicating court |
-| `privy` | Parties involved in the case; names may be anonymized |
-| `case_text` | Original judicial text |
-| `case_dt_hour` | Standardized accident occurrence time at hourly resolution |
-| `province` | Province-level administrative region |
-| `city` | Municipality or prefecture-level city |
-| `district` | County or urban district |
+| `province` | Province-level administrative region of the accident |
+| `city` | Municipality or prefecture-level city of the accident |
+| `district` | County or urban district of the accident |
 | `specific_place` | Text description of the accident location |
-| `lng` | WGS84 longitude |
-| `lat` | WGS84 latitude |
-| `vehicle` | Vehicle category: 0 = car only; 1 = car vs. motorcycle/e-bike; 2 = car vs. pedestrian; 3 = motorcycle/e-bike vs. pedestrian |
+| `vehicle` | Broad road-user interaction category: 0 = car-only accident; 1 = car vs. motorcycle/e-bike; 2 = car vs. pedestrian; 3 = motorcycle/e-bike vs. pedestrian |
 | `death` | Fatality outcome: 0 = no fatality; 1 = at least one fatality |
+| `lng` | WGS84 longitude in decimal degrees |
+| `lat` | WGS84 latitude in decimal degrees |
+| `case_dt_hour` | Standardized accident occurrence time at hourly resolution |
+| `court_name` | Name of the adjudicating court |
+
+As defined in Table 1, “car” includes passenger cars, trucks and buses; motorcycles/e-bikes are treated separately. “Car-only” describes the participant type, not the number of vehicles. An indeterminable extracted field may be empty; a missing fatality value must not be interpreted as zero.
+
+### Internal processing fields and public export
+
+The source text and party information remain inputs to the internal construction workflow. In the current code, `5.1` and `5.2` still use a 13-column internal schema containing `privy` and `case_text` for source linkage and conservative record deduplication; `3.5` also retains these fields in its processing output. These intermediate files are not the revised public-release schema above. The current numbered scripts do not include the final removal of these two columns: before publishing a regenerated core dataset or example file, select the 11 public fields listed above; exclude `privy` and `case_text` from any supplementary public export as well. Do not remove them from upstream inputs required by the existing deduplication logic.
+
+This README reflects the revised manuscript and response letter; the contents of the currently downloadable Figshare files have not been independently checked in this update.
 
 ## Processing workflow
 
@@ -58,8 +66,8 @@ The numeric filename prefixes indicate the intended processing order.
 | 1. Source screening | `1.1 fillter_data_develop.ipynb`, `1.2 fillter_data_main.ipynb`, `1.3 count line.ipynb` | Explore, filter, batch-process, merge, and count court judgment records |
 | 2. LLM extraction | `2.1 llm_test.py`, `2.2 llm.ipynb`, `2.3 zetatechs_transport.py` | Test an OpenAI-compatible endpoint and extract accident time, location, vehicle, and fatality fields; the batch script supports resumption |
 | 3. Cleaning and standardization | `3.1 filter_result.ipynb`, `3.2 Address geocoding.ipynb`, `3.2 bd092wgs84.py`, `3.2 gb18030_utf-8-sig.py`, `3.3 time_calculation.ipynb`, `3.4 combin_csv.ipynb` | Clean extracted locations, geocode addresses, convert coordinates to WGS84, normalize encodings and time, and combine outputs |
-| 4. Analysis and visualization | `4.1 geo_visualization.ipynb` through `4.6 city_analysis.ipynb` | Produce temporal, geographic, vehicle-type, fatality, and accident-to-judgment analyses |
 | 3b. Incomplete-time supplement | `3.5 supplementary_incomplete_time.py` | Retain first-instance records excluded by the original hourly time rule; conservatively recover year/month/day information and preserve provenance |
+| 4. Analysis and visualization | `4.1 geo_visualization.ipynb` through `4.6 city_analysis.ipynb` | Produce temporal, geographic, vehicle-type, fatality, and accident-to-judgment analyses |
 | 5. Dataset assembly | `5.1 output_dataset.ipynb`, `5.2fillter_first.ipynb` | Assemble release fields, audit source-case-number ambiguity, synchronize record deduplication across stages 7/8/9, and retain first-instance judgments |
 | 6. Validation sampling | `6.1 stratified_validation_sample.py` | Build an offline sampling frame and select 3,000 records using judgment year, court province and case type |
 
@@ -67,11 +75,11 @@ The extraction used Google Gemini 2.0 Flash (`gemini-2.0-flash-001`) through an 
 
 ## New and revised workflows
 
-- **Incomplete-time supplement:** `3.5` takes the complement of the original hourly eligibility rule, then applies first-instance screening. It does not merge incidents or deduplicate by case number. `case_dt_hour` stays empty; derived precision is at most day-level. Ambiguous expressions and implausible dates are flagged rather than imputed. Its records must not all be described as a 2000–2020 accident cohort.
+- **Incomplete-time supplement:** The revised manuscript reports **218,251 additional first-instance records**, provided separately from the core dataset. Response R2-3 breaks these down into 214,772 unmatched hourly-format records, 3,312 empty-time records and 167 invalid-datetime records. These counts have not been recomputed here. `3.5` takes the complement of the original hourly eligibility rule, then applies first-instance screening. It does not merge incidents or deduplicate by case number. `case_dt_hour` stays empty; derived precision is at most day-level. Ambiguous expressions and implausible dates are flagged rather than imputed. Its records must not all be described as a 2000–2020 accident cohort.
 - **Temporal analysis (Fig. 3):** `4.3` reads stage 7, explicitly restricts timestamps to 2000-01-01 through 2020-12-31, records exclusions, and exports separate hour/month/year figures plus counts and QA summaries.
 - **City analysis (Fig. 5):** `4.6` parses mixed date formats, excludes negative accident-to-judgment intervals, retains all cities with records, and records grouping/missingness counts. It applies no additional 2000–2020 filter. Its mortality flag proportion uses all retained records in each city as the denominator.
 - **Assembly:** `5.1` retains the historical first-source-case-number join while writing an ambiguity audit; `5.2` invokes the same shared deduplication routine. These stages replace derived datasets, so retain your own backup before running them.
-- **Validation sample:** `6.1` uses seed `20261107`, a minimum allocation of `min(2, N_h)` per nonempty stratum, proportional largest-remainder allocation of the remaining sample, and sampling without replacement within strata. Court province is a sampling variable, not the accident province. Creating the sample does not constitute completed manual/model validation.
+- **Validation sample:** `6.1` uses seed `20261107`, a minimum allocation of `min(2, N_h)` per nonempty stratum, proportional largest-remainder allocation of the remaining sample, and sampling without replacement within strata. Court province is a sampling variable, not the accident province. The revised manuscript reports coverage of all 1,193 nonempty strata (1,451 civil, 872 criminal and 677 other/unknown records) and describes subsequent manual verification. This repository script generates the sample; it does not itself perform that verification or reproduce the field-agreement results in Supplementary Table S3.
 
 ### Embedded helpers and execution requirements
 
