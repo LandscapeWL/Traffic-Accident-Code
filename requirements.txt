@@ -6,8 +6,9 @@ matplotlib
 matplotlib-scalebar
 numpy
 openai
-pandas
+pandas>=2.0
 pypinyin
 requests
 shapely
 statsmodels
+duckdb
